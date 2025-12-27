@@ -4,6 +4,7 @@ from VoiceManager import VoiceManager
 import matplotlib.pyplot as plt
 from typing import Tuple
 from typing import Union
+import librosa
 
 def inverse(voice_manager: VoiceManager) -> VoiceManager:
     """
@@ -144,3 +145,39 @@ def add_head(voice_manager: VoiceManager, head_time: float) -> VoiceManager:
         right_channel = np.concatenate([head, right_channel])
 
     return VoiceManager(left_channel=left_channel, right_channel=right_channel, sample_rate=sample_rate)
+
+
+
+def strech(voice_manager: VoiceManager, target_duration: float) -> VoiceManager:
+    """
+    Slow down the audio to target duration (time stretch without pitch change)
+    
+    Args:
+        voice_manager: VoiceManager object containing audio data
+        target_duration: Target duration in seconds (must be greater than original duration)
+    
+    Returns:
+        VoiceManager: New VoiceManager object with slowed down audio
+    """
+    original_duration = voice_manager.duration
+    sample_rate = voice_manager.rate
+    
+    if target_duration <= 0:
+        raise ValueError(f"Target duration ({target_duration}) must be positive")
+
+    speed_factor = original_duration / target_duration
+    left_channel, right_channel = voice_manager.get_audio_array()
+    
+    # Convert int16 to float32 and normalize to [-1.0, 1.0]
+    left_channel_float = left_channel.astype(np.float32) / 32768.0
+    left_channel_stretched = librosa.effects.time_stretch(left_channel_float, rate=speed_factor)
+    # Convert back to int16
+    left_channel_new = (left_channel_stretched * 32768.0).astype(np.int16)
+    
+    right_channel_new = None
+    if right_channel is not None:
+        right_channel_float = right_channel.astype(np.float32) / 32768.0
+        right_channel_stretched = librosa.effects.time_stretch(right_channel_float, rate=speed_factor)
+        right_channel_new = (right_channel_stretched * 32768.0).astype(np.int16)
+    
+    return VoiceManager(left_channel=left_channel_new, right_channel=right_channel_new, sample_rate=sample_rate)
