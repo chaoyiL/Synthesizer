@@ -77,3 +77,39 @@ def FFT(voice_manager: VoiceManager, display: bool = False) -> Tuple[np.array, U
             plt.show()
 
     return left_channel_FFT, right_channel_FFT
+
+def IFFT(FFT_array: np.array) -> np.array:
+    """
+    IFFT the FFT array
+    """
+    return np.fft.ifft(FFT_array)
+
+def filter(voice_manager: VoiceManager, low_freq: float, high_freq: float) -> VoiceManager:
+    """
+    Filter the voice by low frequency and high frequency
+    """
+    sample_rate = voice_manager.rate
+    left_channel_FFT, right_channel_FFT = FFT(voice_manager)
+
+    if high_freq == -1:
+        high_freq = len(left_channel_FFT)
+
+    # 创建滤波淹掩膜
+    filter_mask = np.zeros_like(left_channel_FFT, dtype=complex)
+    filter_mask[low_freq:high_freq] = 1 + 0j
+
+    # 应用滤波掩膜
+    for i in range(2):
+        left_channel_FFT_new = left_channel_FFT * filter_mask
+        left_channel = np.real(IFFT(left_channel_FFT_new)).astype(np.int16)
+
+        if right_channel_FFT is not None:
+            right_channel_FFT_new = right_channel_FFT * filter_mask    
+            right_channel = np.real(IFFT(right_channel_FFT_new)).astype(np.int16)
+        else:
+            right_channel = None
+        
+        voice_manager = VoiceManager(left_channel=left_channel, right_channel=right_channel, sample_rate=sample_rate)
+        left_channel_FFT, right_channel_FFT = FFT(voice_manager)
+
+    return VoiceManager(left_channel=left_channel, right_channel=right_channel, sample_rate=sample_rate)
