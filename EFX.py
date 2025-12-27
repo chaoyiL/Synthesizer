@@ -21,9 +21,9 @@ def inverse(voice_manager: VoiceManager) -> VoiceManager:
         right_channel_inverse = np.zeros_like(right_channel)
         for i in range(len(right_channel)):
             right_channel_inverse[i] = right_channel[len(right_channel) - i - 1]
-    
-    return VoiceManager(left_channel=left_channel_inverse, 
-                        right_channel=right_channel_inverse, 
+
+    return VoiceManager(left_channel=left_channel_inverse,
+                        right_channel=right_channel_inverse,
                         sample_rate=sample_rate)
 
 def cut(voice_manager: VoiceManager, start_time: float, end_time: float) -> VoiceManager:
@@ -60,8 +60,9 @@ def FFT(voice_manager: VoiceManager, display: bool = False) -> Tuple[np.array, U
         right_channel_FFT = np.fft.fft(right_channel)
 
     if display:
+        # Plot magnitudes to avoid casting complex values to real
         plt.figure(figsize=(12, 6))
-        plt.plot(left_channel_FFT, linewidth=0.5, color='blue', alpha=0.7)
+        plt.plot(np.abs(left_channel_FFT), linewidth=0.5, color='blue', alpha=0.7)
         plt.title('Left Channel FFT', fontsize=14, fontproperties='SimHei')
         plt.xlabel('Frequency (Hz)', fontsize=12, fontproperties='SimHei')
         plt.ylabel('Amplitude', fontsize=12, fontproperties='SimHei')
@@ -69,7 +70,7 @@ def FFT(voice_manager: VoiceManager, display: bool = False) -> Tuple[np.array, U
         plt.show()
 
         if right_channel is not None:
-            plt.plot(right_channel_FFT, linewidth=0.5, color='red', alpha=0.7)
+            plt.plot(np.abs(right_channel_FFT), linewidth=0.5, color='red', alpha=0.7)
             plt.title('Right Channel FFT', fontsize=14, fontproperties='SimHei')
             plt.xlabel('Frequency (Hz)', fontsize=12, fontproperties='SimHei')
             plt.ylabel('Amplitude', fontsize=12, fontproperties='SimHei')
@@ -104,11 +105,11 @@ def filter(voice_manager: VoiceManager, low_freq: float, high_freq: float) -> Vo
         left_channel = np.real(IFFT(left_channel_FFT_new)).astype(np.int16)
 
         if right_channel_FFT is not None:
-            right_channel_FFT_new = right_channel_FFT * filter_mask    
+            right_channel_FFT_new = right_channel_FFT * filter_mask
             right_channel = np.real(IFFT(right_channel_FFT_new)).astype(np.int16)
         else:
             right_channel = None
-        
+
         voice_manager = VoiceManager(left_channel=left_channel, right_channel=right_channel, sample_rate=sample_rate)
         left_channel_FFT, right_channel_FFT = FFT(voice_manager)
 

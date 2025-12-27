@@ -1,5 +1,4 @@
 # python == 3.8.0
-from numpy.fft import ifftn
 import pyaudio
 import wave
 import matplotlib.pyplot as plt
@@ -8,9 +7,9 @@ from typing import Tuple
 from typing import Union
 
 class VoiceManager:
-    def __init__(self, 
-    wave_filename:Union[str, None] = None, 
-    left_channel:Union[np.array, None] = None, 
+    def __init__(self,
+    wave_filename:Union[str, None] = None,
+    left_channel:Union[np.array, None] = None,
     right_channel:Union[np.array, None] = None,
     sample_rate:Union[int, None] = None
     ):
@@ -52,7 +51,7 @@ class VoiceManager:
             else:
                 self.left_channel = self.audio_array
                 self.right_channel = None
-        
+
         elif left_channel is not None:
             self.left_channel = left_channel
             self.right_channel = right_channel
@@ -113,7 +112,7 @@ class VoiceManager:
             plt.xlabel('时间 (秒)', fontsize=12, fontproperties='SimHei')
             plt.ylabel('振幅', fontsize=12, fontproperties='SimHei')
             plt.grid(True, alpha=0.3)
-            
+
             plt.subplot(2, 1, 2)
             plt.plot(time_axis, self.right_channel, linewidth=0.5, color='red', alpha=0.7)
             plt.title('右声道波形', fontsize=14, fontproperties='SimHei')
