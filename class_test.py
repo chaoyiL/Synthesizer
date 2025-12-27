@@ -1,8 +1,5 @@
-# python == 3.8.0
 import VoiceManager
 import EFX
-import AMP
-import numpy as np
 
 if __name__ == "__main__":
     voice_ori = VoiceManager.VoiceManager(wave_filename="./assets/wechat_notice.wav")
