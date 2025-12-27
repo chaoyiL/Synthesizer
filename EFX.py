@@ -1,9 +1,9 @@
-# python == 3.8.0
 import numpy as np
 from VoiceManager import VoiceManager
 import matplotlib.pyplot as plt
 from typing import Tuple
 from typing import Union
+
 
 def inverse(voice_manager: VoiceManager) -> VoiceManager:
     """
@@ -22,11 +22,16 @@ def inverse(voice_manager: VoiceManager) -> VoiceManager:
         for i in range(len(right_channel)):
             right_channel_inverse[i] = right_channel[len(right_channel) - i - 1]
 
-    return VoiceManager(left_channel=left_channel_inverse,
-                        right_channel=right_channel_inverse,
-                        sample_rate=sample_rate)
+    return VoiceManager(
+        left_channel=left_channel_inverse,
+        right_channel=right_channel_inverse,
+        sample_rate=sample_rate,
+    )
 
-def cut(voice_manager: VoiceManager, start_time: float, end_time: float) -> VoiceManager:
+
+def cut(
+    voice_manager: VoiceManager, start_time: float, end_time: float
+) -> VoiceManager:
     """
     Cut the voice from start time to end time
     """
@@ -46,9 +51,16 @@ def cut(voice_manager: VoiceManager, start_time: float, end_time: float) -> Voic
     else:
         right_channel_cut = None
 
-    return VoiceManager(left_channel=left_channel_cut, right_channel=right_channel_cut, sample_rate=sample_rate)
+    return VoiceManager(
+        left_channel=left_channel_cut,
+        right_channel=right_channel_cut,
+        sample_rate=sample_rate,
+    )
 
-def FFT(voice_manager: VoiceManager, display: bool = False) -> Tuple[np.array, Union[np.array, None]]:
+
+def FFT(
+    voice_manager: VoiceManager, display: bool = False
+) -> Tuple[np.array, Union[np.array, None]]:
     """
     FFT the voice
     """
@@ -62,22 +74,23 @@ def FFT(voice_manager: VoiceManager, display: bool = False) -> Tuple[np.array, U
     if display:
         # Plot magnitudes to avoid casting complex values to real
         plt.figure(figsize=(12, 6))
-        plt.plot(np.abs(left_channel_FFT), linewidth=0.5, color='blue', alpha=0.7)
-        plt.title('Left Channel FFT', fontsize=14, fontproperties='SimHei')
-        plt.xlabel('Frequency (Hz)', fontsize=12, fontproperties='SimHei')
-        plt.ylabel('Amplitude', fontsize=12, fontproperties='SimHei')
+        plt.plot(np.abs(left_channel_FFT), linewidth=0.5, color="blue", alpha=0.7)
+        plt.title("Left Channel FFT", fontsize=14, fontproperties="SimHei")
+        plt.xlabel("Frequency (Hz)", fontsize=12, fontproperties="SimHei")
+        plt.ylabel("Amplitude", fontsize=12, fontproperties="SimHei")
         plt.grid(True, alpha=0.3)
         plt.show()
 
         if right_channel is not None:
-            plt.plot(np.abs(right_channel_FFT), linewidth=0.5, color='red', alpha=0.7)
-            plt.title('Right Channel FFT', fontsize=14, fontproperties='SimHei')
-            plt.xlabel('Frequency (Hz)', fontsize=12, fontproperties='SimHei')
-            plt.ylabel('Amplitude', fontsize=12, fontproperties='SimHei')
+            plt.plot(np.abs(right_channel_FFT), linewidth=0.5, color="red", alpha=0.7)
+            plt.title("Right Channel FFT", fontsize=14, fontproperties="SimHei")
+            plt.xlabel("Frequency (Hz)", fontsize=12, fontproperties="SimHei")
+            plt.ylabel("Amplitude", fontsize=12, fontproperties="SimHei")
             plt.grid(True, alpha=0.3)
             plt.show()
 
     return left_channel_FFT, right_channel_FFT
+
 
 def IFFT(FFT_array: np.array) -> np.array:
     """
@@ -85,7 +98,10 @@ def IFFT(FFT_array: np.array) -> np.array:
     """
     return np.fft.ifft(FFT_array)
 
-def filter(voice_manager: VoiceManager, low_freq: float, high_freq: float) -> VoiceManager:
+
+def filter(
+    voice_manager: VoiceManager, low_freq: float, high_freq: float
+) -> VoiceManager:
     """
     Filter the voice by low frequency and high frequency
     """
@@ -110,7 +126,13 @@ def filter(voice_manager: VoiceManager, low_freq: float, high_freq: float) -> Vo
         else:
             right_channel = None
 
-        voice_manager = VoiceManager(left_channel=left_channel, right_channel=right_channel, sample_rate=sample_rate)
+        voice_manager = VoiceManager(
+            left_channel=left_channel,
+            right_channel=right_channel,
+            sample_rate=sample_rate,
+        )
         left_channel_FFT, right_channel_FFT = FFT(voice_manager)
 
-    return VoiceManager(left_channel=left_channel, right_channel=right_channel, sample_rate=sample_rate)
+    return VoiceManager(
+        left_channel=left_channel, right_channel=right_channel, sample_rate=sample_rate
+    )
