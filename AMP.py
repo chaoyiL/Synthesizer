@@ -1,6 +1,7 @@
 import numpy as np
 from VoiceManager import VoiceManager
 import EFX
+import librosa
 
 # TODO: 需要改进
 # def base_freq(voice_manager: VoiceManager) -> float:
@@ -28,28 +29,26 @@ def tune_resample(voice_manager: VoiceManager, factor: float) -> VoiceManager:
     
     return voice_manager_new
 
-# 原理有误
-def tune_FFT(voice_manager: VoiceManager, factor: float) -> VoiceManager:
-    """
-    Tune the array by a factor
-    """
-    sample_rate = voice_manager.rate
-    left_channel_FFT, right_channel_FFT = EFX.FFT(voice_manager)
-    
-    # 相位存在问题
-    left_channel_FFT_tuned = np.zeros((int(len(left_channel_FFT) * factor),))
-    for i in range(len(left_channel_FFT)):
-        left_channel_FFT_tuned[int(i * factor)] = left_channel_FFT[i]
-    left_channel_tuned = np.real(EFX.IFFT(left_channel_FFT_tuned)).astype(np.int16)
-
-    if right_channel_FFT is not None:
-        right_channel_FFT_tuned = np.zeros((int(len(right_channel_FFT) * factor),))
-        for i in range(len(right_channel_FFT)):
-            right_channel_FFT_tuned[int(i * factor)] = right_channel_FFT[i]
-        right_channel_tuned = np.real(EFX.IFFT(right_channel_FFT_tuned)).astype(np.int16)
+def tune(voice_manager: VoiceManager, steps: float, bins_per_octave: int = 12) -> VoiceManager:
+    wav_data_left = voice_manager.left_channel
+    if voice_manager.right_channel is not None: 
+        wav_data_right = voice_manager.right_channel
     else:
-        right_channel_tuned = None
+        wav_data_right = None
 
-    voice_manager_new = VoiceManager(left_channel=left_channel_tuned, right_channel=right_channel_tuned, sample_rate=sample_rate)
+    wav_data_left = wav_data_left.astype(np.float32)
+    if wav_data_right is not None:
+        wav_data_right = wav_data_right.astype(np.float32)
 
+    wav_data_tuned_left = librosa.effects.pitch_shift(wav_data_left, sr=voice_manager.rate, n_steps=steps, bins_per_octave=bins_per_octave)
+    if wav_data_right is not None:
+        wav_data_tuned_right = librosa.effects.pitch_shift(wav_data_right, sr=voice_manager.rate, n_steps=steps, bins_per_octave=bins_per_octave)
+    else:
+        wav_data_tuned_right = None
+    
+    wav_data_tuned_left = wav_data_tuned_left.astype(np.int16)
+    if wav_data_tuned_right is not None:
+        wav_data_tuned_right = wav_data_tuned_right.astype(np.int16)
+
+    voice_manager_new = VoiceManager(left_channel=wav_data_tuned_left, right_channel=wav_data_tuned_right, sample_rate=voice_manager.rate)
     return voice_manager_new
