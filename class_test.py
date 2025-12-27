@@ -17,12 +17,8 @@ if __name__ == "__main__":
     voice_2.play_audio()
     
     factor = 1.1
-    print("factor", factor)
     voice_3 = AMP.tune_resample(voice_1, factor)
-    print("factor check", voice_1.duration / voice_3.duration)
     voice_3.play_audio()
 
-    voice_4 = AMP.tune_FFT(voice_1, 1)
+    voice_4 = AMP.tune(voice_1_ori, 3)
     voice_4.play_audio()
-    print("duration check", voice_1.duration)
-    print("duration check", voice_4.duration)
