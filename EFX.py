@@ -34,8 +34,10 @@ def cut(voice_manager: VoiceManager, start_time: float, end_time: float) -> Voic
     sample_rate = voice_manager.rate
     duration = voice_manager.duration
 
-    if start_time < 0 or end_time < 0 or start_time > duration or end_time > duration:
+    if start_time < 0 or start_time > duration or end_time > duration:
         raise ValueError("Invalid start time or end time")
+    if end_time == -1:
+        end_time = duration
 
     start_index = int(start_time * sample_rate)
     end_index = int(end_time * sample_rate)
@@ -99,17 +101,46 @@ def filter(voice_manager: VoiceManager, low_freq: float, high_freq: float) -> Vo
     filter_mask[low_freq:high_freq] = 1 + 0j
 
     # 应用滤波掩膜
-    for i in range(2):
-        left_channel_FFT_new = left_channel_FFT * filter_mask
-        left_channel = np.real(IFFT(left_channel_FFT_new)).astype(np.int16)
+    left_channel_FFT_new = left_channel_FFT * filter_mask
+    left_channel = np.real(IFFT(left_channel_FFT_new)).astype(np.int16)
 
-        if right_channel_FFT is not None:
-            right_channel_FFT_new = right_channel_FFT * filter_mask    
-            right_channel = np.real(IFFT(right_channel_FFT_new)).astype(np.int16)
-        else:
-            right_channel = None
-        
-        voice_manager = VoiceManager(left_channel=left_channel, right_channel=right_channel, sample_rate=sample_rate)
-        left_channel_FFT, right_channel_FFT = FFT(voice_manager)
+    if right_channel_FFT is not None:
+        right_channel_FFT_new = right_channel_FFT * filter_mask    
+        right_channel = np.real(IFFT(right_channel_FFT_new)).astype(np.int16)
+    else:
+        right_channel = None
+    
+    voice_manager = VoiceManager(left_channel=left_channel, right_channel=right_channel, sample_rate=sample_rate)
+    left_channel_FFT, right_channel_FFT = FFT(voice_manager)
+
+    return VoiceManager(left_channel=left_channel, right_channel=right_channel, sample_rate=sample_rate)
+
+def add_tail(voice_manager: VoiceManager, tail_time: float) -> VoiceManager:
+    """
+    Add tail to the voice
+    """
+    sample_rate = voice_manager.rate
+    left_channel, right_channel = voice_manager.get_audio_array()
+
+    tail_length = int(tail_time * sample_rate)
+    tail = np.zeros(tail_length).astype(np.int16)
+    left_channel = np.concatenate([left_channel, tail])
+    if right_channel is not None:
+        right_channel = np.concatenate([right_channel, tail])
+
+    return VoiceManager(left_channel=left_channel, right_channel=right_channel, sample_rate=sample_rate)
+
+def add_head(voice_manager: VoiceManager, head_time: float) -> VoiceManager:
+    """
+    Add head to the voice
+    """
+    sample_rate = voice_manager.rate
+    left_channel, right_channel = voice_manager.get_audio_array()
+
+    head_length = int(head_time * sample_rate)
+    head = np.zeros(head_length).astype(np.int16)
+    left_channel = np.concatenate([head, left_channel])
+    if right_channel is not None:
+        right_channel = np.concatenate([head, right_channel])
 
     return VoiceManager(left_channel=left_channel, right_channel=right_channel, sample_rate=sample_rate)
