@@ -1,4 +1,3 @@
-# python == 3.8.0
 import numpy as np
 from VoiceManager import VoiceManager
 import matplotlib.pyplot as plt
@@ -22,9 +21,9 @@ def inverse(voice_manager: VoiceManager) -> VoiceManager:
         right_channel_inverse = np.zeros_like(right_channel)
         for i in range(len(right_channel)):
             right_channel_inverse[i] = right_channel[len(right_channel) - i - 1]
-    
-    return VoiceManager(left_channel=left_channel_inverse, 
-                        right_channel=right_channel_inverse, 
+
+    return VoiceManager(left_channel=left_channel_inverse,
+                        right_channel=right_channel_inverse,
                         sample_rate=sample_rate)
 
 def cut(voice_manager: VoiceManager, start_time: float, end_time: float) -> VoiceManager:
@@ -106,11 +105,11 @@ def filter(voice_manager: VoiceManager, low_freq: float, high_freq: float) -> Vo
     left_channel = np.real(IFFT(left_channel_FFT_new)).astype(np.int16)
 
     if right_channel_FFT is not None:
-        right_channel_FFT_new = right_channel_FFT * filter_mask    
+        right_channel_FFT_new = right_channel_FFT * filter_mask
         right_channel = np.real(IFFT(right_channel_FFT_new)).astype(np.int16)
     else:
         right_channel = None
-    
+
     voice_manager = VoiceManager(left_channel=left_channel, right_channel=right_channel, sample_rate=sample_rate)
     left_channel_FFT, right_channel_FFT = FFT(voice_manager)
 
@@ -151,33 +150,33 @@ def add_head(voice_manager: VoiceManager, head_time: float) -> VoiceManager:
 def stretch(voice_manager: VoiceManager, target_duration: float) -> VoiceManager:
     """
     Slow down the audio to target duration (time stretch without pitch change)
-    
+
     Args:
         voice_manager: VoiceManager object containing audio data
         target_duration: Target duration in seconds (must be greater than original duration)
-    
+
     Returns:
         VoiceManager: New VoiceManager object with slowed down audio
     """
     original_duration = voice_manager.duration
     sample_rate = voice_manager.rate
-    
+
     if target_duration <= 0:
         raise ValueError(f"Target duration ({target_duration}) must be positive")
 
     speed_factor = original_duration / target_duration
     left_channel, right_channel = voice_manager.get_audio_array()
-    
+
     # Convert int16 to float32 and normalize to [-1.0, 1.0]
     left_channel_float = left_channel.astype(np.float32) / 32768.0
     left_channel_stretched = librosa.effects.time_stretch(left_channel_float, rate=speed_factor)
     # Convert back to int16
     left_channel_new = (left_channel_stretched * 32768.0).astype(np.int16)
-    
+
     right_channel_new = None
     if right_channel is not None:
         right_channel_float = right_channel.astype(np.float32) / 32768.0
         right_channel_stretched = librosa.effects.time_stretch(right_channel_float, rate=speed_factor)
         right_channel_new = (right_channel_stretched * 32768.0).astype(np.int16)
-    
+
     return VoiceManager(left_channel=left_channel_new, right_channel=right_channel_new, sample_rate=sample_rate)
