@@ -4,9 +4,6 @@ import time
 import pyaudio
 import wave
 import numpy as np
-import AMP
-import EFX
-import random
 
 # 全局变量用于跟踪读取位置
 _audio_position = 0
@@ -50,15 +47,15 @@ class VoicePlayer:
             [voice.left_channel for voice in self.voice_list]
         )
         if any(voice.right_channel is None for voice in self.voice_list):
-            total_track_array_right = np.concatenate(
-                [
-                    voice.right_channel
-                    for voice in self.voice_list
-                    if voice.right_channel is not None
-                ]
-            )
-        else:
             total_track_array_right = None
+        else:
+            total_track_array_right = np.concatenate(
+            [
+                voice.right_channel
+                for voice in self.voice_list
+                if voice.right_channel is not None
+            ]
+            )
 
         total_track = VoiceManager.VoiceManager(
             left_channel=total_track_array_left,
@@ -66,7 +63,7 @@ class VoicePlayer:
             sample_rate=self.voice_list[0].rate,
         )
         print(
-            f"{self.name} Total track frames: {total_track.frames}, total rate: {total_track.rate} Hz, total duration: {total_track.duration}/{total_track.frames} seconds"
+            f"{self.name} Total track frames: {total_track.frames}, total rate: {total_track.rate} Hz, total duration: {total_track.duration} seconds"
         )
 
         self.stream = self.p.open(
