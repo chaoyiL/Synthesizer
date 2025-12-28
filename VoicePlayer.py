@@ -11,19 +11,22 @@ _bytes_per_frame = None
 
 class VoicePlayer:
     '''非阻塞式地播放一个playlist'''
-    def __init__(self, voice_list: list[VoiceManager.VoiceManager]):
+    def __init__(self, voice_list: list[VoiceManager.VoiceManager], name: str = None):
         self.voice_list = voice_list
         self.p = pyaudio.PyAudio()
         self.stream = None
-        self.total_duration = sum([voice.duration for voice in self.voice_list])
+        self.name = name
 
     def play(self):
-        print(f"Total duration: {self.total_duration} seconds")
-
         # 拼接全轨
         total_track_array_left = np.concatenate([voice.left_channel for voice in self.voice_list])
-        total_track_array_right = np.concatenate([voice.right_channel for voice in self.voice_list if voice.right_channel is not None])
+        if any(voice.right_channel is None for voice in self.voice_list):
+            total_track_array_right = np.concatenate([voice.right_channel for voice in self.voice_list if voice.right_channel is not None])
+        else:
+            total_track_array_right = None
+
         total_track = VoiceManager.VoiceManager(left_channel=total_track_array_left, right_channel=total_track_array_right, sample_rate=self.voice_list[0].rate)
+        print(f"{self.name} Total track frames: {total_track.frames}, total rate: {total_track.rate} Hz, total duration: {total_track.duration}/{total_track.frames} seconds")
 
         self.stream = self.p.open(
             format=pyaudio.paInt16, 
@@ -49,8 +52,8 @@ if __name__ == "__main__":
     voice_list = [voice_1, voice_2]
     voice_list_2 = [voice_3, voice_4]
 
-    voice_player_1 = VoicePlayer(voice_list)
-    voice_player_2 = VoicePlayer(voice_list_2)
+    voice_player_1 = VoicePlayer(voice_list, name="voice_player_1")
+    voice_player_2 = VoicePlayer(voice_list_2, name="voice_player_2")
     voice_player_1.play()
     voice_player_2.play()
 
