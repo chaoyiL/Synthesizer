@@ -2,11 +2,11 @@ import pyaudio
 import wave
 import matplotlib.pyplot as plt
 import numpy as np
+import threading
 from typing import Tuple
 from typing import Union
 
-
-class VoiceManager:
+class VoiceManager():
     def __init__(
         self,
         wave_filename: Union[str, None] = None,
@@ -22,12 +22,20 @@ class VoiceManager:
         self.rate = sample_rate
         self.frames = None
         self.duration = None
+        
+        self.sampwidth = None
 
         # what we want to eventually get and use
         self.audio_data = None
         self.audio_array = None
         self.left_channel = None
         self.right_channel = None
+
+        # for non-blocking audio playback
+        self._play_thread = None
+        self._pyaudio_instance = None
+        self._audio_stream = None
+        self._is_playing = False
 
         # create voice from wave file
         if wave_filename is not None and left_channel is None and right_channel is None:
@@ -41,6 +49,7 @@ class VoiceManager:
             self.channels = self.wf.getnchannels()  # 声道数
             self.frames = self.wf.getnframes()  # 总帧数
             self.duration = self.frames / self.rate  # 音频时长（秒）
+            self.sampwidth = self.wf.getsampwidth()
 
             self.audio_data = self.wf.readframes(self.frames)  # 读取所有音频数据
             self.audio_array = np.frombuffer(
@@ -74,9 +83,14 @@ class VoiceManager:
             self.frames = len(self.audio_array)
             self.duration = self.frames / self.rate
             self.audio_data = self.audio_array.tobytes()
+            self.sampwidth = 2 # 统一为 Int16
 
         else:
             raise ValueError("Invalid input")
+        
+        self._audio_position = 0
+        self._bytes_per_frame = self.sampwidth * self.channels
+
 
     def get_audio_array(self) -> Tuple[np.array, Union[np.array, None]]:
         """
@@ -86,17 +100,38 @@ class VoiceManager:
 
     def play_audio(self):
         """
-        Play the audio
+        Play the audio (blocking)
         """
         p = pyaudio.PyAudio()
         stream = p.open(
-            format=pyaudio.paInt16, channels=self.channels, rate=self.rate, output=True
-        )
-        stream.write(self.audio_data)
+            format=pyaudio.paInt16, 
+            channels=self.channels, rate=self.rate, 
+            output=True)
+        stream.write(self.audio_data) 
         stream.stop_stream()
         stream.close()
         p.terminate()
 
+    def callback(self, in_data, frame_count, time_info, status):
+
+        # 计算需要读取的字节数
+        bytes_to_read = frame_count * self._bytes_per_frame
+        
+        # 检查是否还有数据可读
+        if self._audio_position >= len(self.audio_data):
+            return (b'', pyaudio.paComplete)
+        
+        # 读取数据
+        end_position = min(self._audio_position + bytes_to_read, len(self.audio_data))
+        data = self.audio_data[self._audio_position:end_position]
+        self._audio_position = end_position
+        
+        # 如果数据不足一帧，返回空数据并完成
+        if len(data) < bytes_to_read:
+            return (data, pyaudio.paComplete)
+        
+        return (data, pyaudio.paContinue)
+    
     def visualize_audio(self):
         """
         Visualize the audio
