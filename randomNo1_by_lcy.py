@@ -1,6 +1,6 @@
 from VoiceManager import VoiceManager
 import EFX
-from VoicePlayer import VoicePlayer
+from VoicePlayer import VoicePlayer, mix_and_save_players
 import AMP
 import random
 import numpy as np
@@ -35,16 +35,8 @@ if __name__ == "__main__":
     voice_player_2 = VoicePlayer(voice_list_2, name="voice_player_2")
     voice_player_3 = VoicePlayer(voice_list_3, name="voice_player_3")
     voice_player_4 = VoicePlayer(voice_list_4, name="voice_player_4")
-    voice_player_1.play()
-    voice_player_2.play()
-    voice_player_3.play()
-    voice_player_4.play()
 
-    while voice_player_1.is_playing() and voice_player_2.is_playing() and voice_player_3.is_playing() and voice_player_4.is_playing():
-        time.sleep(0.1)
+    mix_and_save_players([voice_player_1, voice_player_2, voice_player_3, voice_player_4], "./randomNo1_by_lcy.wav")
+    mix_and_save_players([voice_player_3, voice_player_4], "./randomNo1_melody.wav")
 
-    voice_player_1.stop()
-    voice_player_2.stop()
-    voice_player_3.stop()
-    voice_player_4.stop()
     print("Main Thread Done")

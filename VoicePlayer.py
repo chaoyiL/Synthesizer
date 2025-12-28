@@ -17,21 +17,21 @@ class VoicePlayer:
         self.stream = None
         self.name = name
 
-    def get_total_track(self):
+    def get_total_track(self) -> VoiceManager.VoiceManager:
         """获取拼接后的完整音轨"""
         total_track_array_left = np.concatenate(
             [voice.left_channel for voice in self.voice_list]
         )
         if any(voice.right_channel is None for voice in self.voice_list):
-            total_track_array_right = np.concatenate(
+            total_track_array_right = None
+        else:
+                        total_track_array_right = np.concatenate(
                 [
                     voice.right_channel
                     for voice in self.voice_list
                     if voice.right_channel is not None
                 ]
             )
-        else:
-            total_track_array_right = None
 
         total_track = VoiceManager.VoiceManager(
             left_channel=total_track_array_left,
@@ -43,29 +43,10 @@ class VoicePlayer:
 
     def play(self):
         # 拼接全轨
-        total_track_array_left = np.concatenate(
-            [voice.left_channel for voice in self.voice_list]
-        )
-        if any(voice.right_channel is None for voice in self.voice_list):
-            total_track_array_right = None
-        else:
-            total_track_array_right = np.concatenate(
-            [
-                voice.right_channel
-                for voice in self.voice_list
-                if voice.right_channel is not None
-            ]
-            )
-
-        total_track = VoiceManager.VoiceManager(
-            left_channel=total_track_array_left,
-            right_channel=total_track_array_right,
-            sample_rate=self.voice_list[0].rate,
-        )
+        total_track = self.get_total_track()
         print(
             f"{self.name} Total track frames: {total_track.frames}, total rate: {total_track.rate} Hz, total duration: {total_track.duration} seconds"
         )
-
         self.stream = self.p.open(
             format=pyaudio.paInt16,
             channels=total_track.channels,
