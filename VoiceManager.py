@@ -76,7 +76,7 @@ class VoiceManager():
                 self.rate = sample_rate
 
             if right_channel is not None:
-                self.audio_array = np.concatenate([left_channel, right_channel], axis=0)
+                self.audio_array = np.concatenate([left_channel.reshape(-1, 1), right_channel.reshape(-1, 1)], axis=1)
                 self.channels = 2
             else:
                 self.audio_array = left_channel

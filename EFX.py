@@ -148,7 +148,7 @@ def add_head(voice_manager: VoiceManager, head_time: float) -> VoiceManager:
 
 
 
-def strech(voice_manager: VoiceManager, target_duration: float) -> VoiceManager:
+def stretch(voice_manager: VoiceManager, target_duration: float) -> VoiceManager:
     """
     Slow down the audio to target duration (time stretch without pitch change)
     
