@@ -9,6 +9,7 @@ from typing import Union
 class VoiceManager():
     def __init__(
         self,
+        name: str = None,
         wave_filename: Union[str, None] = None,
         left_channel: Union[np.array, None] = None,
         right_channel: Union[np.array, None] = None,
@@ -16,6 +17,7 @@ class VoiceManager():
     ):
         default_sample_rate = 48000  # default sample rate
         self.wf = None
+        self.name = name
 
         # basic info of wave
         self.channels = None
@@ -116,6 +118,9 @@ class VoiceManager():
 
         # 计算需要读取的字节数
         bytes_to_read = frame_count * self._bytes_per_frame
+
+        if self._audio_position == 0:
+            print(f"{self.name} start playing")
         
         # 检查是否还有数据可读
         if self._audio_position >= len(self.audio_data):
